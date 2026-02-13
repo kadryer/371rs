@@ -20,4 +20,4 @@ qemu-system-riscv64 -machine sifive_u -bios none -kernel YOUR_FILE
 ```
 
 ## Note
-I'm not sure how to verify this installation sequence for myself. I believe every other step I took to make this is included within the files (such as the step `cargo build --target riscv64imac-unknown-none-elf` after adding it in rustup, or adding the -C arguments in `rustc -C link-args=-Tmemory.x -C link-args=-Tlink.x -C panic=abort src/main.rs`. Please let me know if is an oversight.
+I'm not sure how to verify this installation sequence for myself. I believe every other step I took to make this is included within the files as saved arguments (such as the step `cargo build --target riscv64imac-unknown-none-elf` after adding it in rustup, or adding the -C arguments in `rustc -C link-args=-Tmemory.x -C link-args=-Tlink.x -C panic=abort src/main.rs`). Please let me know if this is an oversight.
