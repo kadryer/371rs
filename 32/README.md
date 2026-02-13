@@ -20,4 +20,5 @@ qemu-system-riscv64 -machine sifive_u -bios none -kernel YOUR_FILE
 ```
 
 ## Note
-I'm not sure how to verify this installation sequence for myself. I believe every other step I took to make this is included within the files as saved arguments (such as the step `cargo build --target riscv64imac-unknown-none-elf` after adding it in rustup, or adding the -C arguments in `rustc -C link-args=-Tmemory.x -C link-args=-Tlink.x -C panic=abort src/main.rs`). Please let me know if this is an oversight.
+I'm not sure how to verify this installation sequence for myself. I believe every other step I took to make this is included within the files as saved arguments (such as the step `cargo build --target riscv64imac-unknown-none-elf` after adding it in rustup, or adding the -C arguments in `rustc -C link-args=-Tmemory.x -C link-args=-Tlink.x -C panic=abort src/main.rs`). Please let me know if this is an oversight. That being said, when trying to reproduce this on a separate device, I perpetually run into the error `gtk initialization failed` when trying to run `qemu-system-riscv64 -machine sifive_u -bios none -kernel main`. This may be from a corruption issue on my own hardware, because during troubleshooting, my Ubuntu uninstalled itself and I was running into corruption issues when reinstalling (my drive is slowly failing).
+
