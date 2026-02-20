@@ -1,0 +1,10 @@
+[unstable]
+build-std = ["core"]
+json-target-spec = true
+
+[build]
+target = "x86-64-kudos.json"
+
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"
+

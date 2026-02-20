@@ -1,0 +1,9 @@
+[package]
+name = "kudos"
+version = "0.1.1"
+edition = "2024"
+
+[dependencies]
+bootloader = "0.9"
+
+

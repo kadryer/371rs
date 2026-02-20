@@ -1,0 +1,7 @@
+[unstable]
+build-std = ["core"]
+json-target-spec = true
+
+[build]
+target = "x86-64-kudos.json"
+
