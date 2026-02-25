@@ -1,6 +1,7 @@
 import numpy as np
 import requests as r
 import sys
+import binascii
 from io import BytesIO
 from PIL import Image as im
 from ppm_hexdump import ppm_hexdump
@@ -12,16 +13,28 @@ COLS = 80
 #Functions
 def image_to_rs_vga_buffer(file):
     file = "https://cd-public.github.io/ai101/images/photo-cat.jpg" if sys.argv[-1] == "src/webimage_to_vga.py" else file
-    req = r.get(file)
-    if req.status_code == 200:
-        img_data = BytesIO(req.content)
-        img = np.array(im.open(img_data), dtype=int)
-        vga_img = coerce_vga(img)
+    try:
+        req = r.get(file)
+        if req.status_code == 200:
+            img_data = BytesIO(req.content)
+            img = np.array(im.open(img_data), dtype=int)
+        else:
+            FileNotFoundError(f"No web file {file} could be found.")
+    except:
         try:
-            f = open("src/img.rs", "x")
+            img = np.array(im.open(file), dtype=int)
+            print(img)
+            print(len(img))
+            print(len(img[0]))
         except:
-            f = open("src/img.rs", "w")
-        f.write(f"pub const VGA_BUFFER: [[u16;80]; 25] = [\n\t{', \n\t'.join(['[%s]' % ', '.join(x) for x in vga_img])}\n];")
+            FileNotFoundError(f"No local file {file} could be found.")
+
+    vga_img = coerce_vga(img)
+    try:
+        f = open("src/img.rs", "x")
+    except:
+        f = open("src/img.rs", "w")
+    f.write(f"pub const VGA_BUFFER: [[u16;80]; 25] = [\n\t{', \n\t'.join(['[%s]' % ', '.join(x) for x in vga_img])}\n];")
 
 
 def coerce_vga(array):
@@ -33,7 +46,7 @@ def coerce_vga(array):
     for row in range(len(raw_pixels)):
         for col in range(len(raw_pixels[row])):
             pixel = raw_pixels[row][col]
-            coerced_pixels[row][col] = "0x{:01X}000".format(np.argmin([np.linalg.norm(pixel - color) for color in colors]))
+            coerced_pixels[row][col] = "0x{:01X}000".format(np.argmin([np.linalg.norm(pixel[:3] - color) for color in colors]))
 
     return coerced_pixels    
             
