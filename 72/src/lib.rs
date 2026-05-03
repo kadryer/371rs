@@ -1,15 +1,15 @@
-#![no_std]
 #![no_main]
+#![no_std]
 #![feature(custom_test_frameworks)]
-#![test_runner(crate::test_runner)]
+#![test_runner(_test_runner)]
 
-mod vga;
-mod serial;
+pub mod vga;
+pub mod serial;
 
 const _EX: [fn(); 2] = [_hi, _bye];
 
-#[cfg(test)]
-fn test_runner(_tests: &[&dyn Fn()]) {
+
+pub fn _test_runner(_tests: &[&dyn Fn()]) {
     let fs = [_EX, _EX, _EX];
     for i in 0..fs.len() {
         serial_print!("Beginning Test Loop 0x{:02x}... \n", i);
@@ -18,36 +18,20 @@ fn test_runner(_tests: &[&dyn Fn()]) {
             j();
             serial_println!("  [Pass]");
         }
-        
     }
-    unsafe { x86_64::instructions::port::Port::new(0xf4).write(0xAu32) };
+    _test_quit();
 }
 
-#[cfg(not(test))]
-#[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
-    println!("{}", info);
-    loop {}
-}
 
 #[cfg(test)]
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
-    // Your code here
+    println!("TEST PANIC: {}", info);
     loop {}
 }
 
-#[unsafe(no_mangle)]
-pub extern "C" fn _start() -> ! {
-    println!("I'm main.");
-
-    #[cfg(test)]
-    test_runner(&[]);
-    unsafe {
-        x86_64::instructions::port::Port::new(0xf4).write(0xAu32);
-    }
-
-    loop {}
+fn _test_quit() {
+    unsafe { x86_64::instructions::port::Port::new(0xf4).write(0xAu32) };
 }
 
 fn _hi() {

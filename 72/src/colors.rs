@@ -1,4 +1,4 @@
-const COLS: usize = 80;
+-const COLS: usize = 80;
 const ROWS: usize = 25;
 const MMIO: usize = 0xb8000;
 const NUM_COLORS: usize = 16;
