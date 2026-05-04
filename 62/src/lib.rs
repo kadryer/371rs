@@ -2,12 +2,9 @@
 #![no_std]
 #![feature(custom_test_frameworks)]
 #![test_runner(_test_runner)]
-#![feature(abi_x86_interrupt)]
 
 pub mod vga;
 pub mod serial;
-pub mod interrupts;
-pub mod gdt;
 
 #[derive(Debug)]
 pub enum QemuExitCode {
@@ -25,15 +22,9 @@ pub fn qemu_quit(exit_code: QemuExitCode) {
     }
 }
 
-pub fn init() {
-    gdt::init_gdt();
-    interrupts::init_idt();
-}
-
 pub fn test_panic(info: &core::panic::PanicInfo) -> ! {
     if let Some(location) = info.location() {
-        serial_print!(
-            "panic occurred in file '{}' at line {}.\n",
+        serial_print!("panic occurred in file '{}' at line {}.\n",
             location.file(),
             location.line(),
         );
@@ -47,8 +38,12 @@ pub fn test_panic(info: &core::panic::PanicInfo) -> ! {
 
 pub fn _test_runner(tests: &[&dyn Fn()]) {
     for i in 0..tests.len() {
+        print!("Running test case {:0x}... ", i);
         serial_print!("Running test case {:0x}...\n", i);
+
         tests[i]();
+
+        println!("Success.");
         serial_print!("Success.\n");
     }
 }
@@ -69,5 +64,7 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 
 fn _ex() {
     assert!(true);
-    return;
+    return
 }
+
+

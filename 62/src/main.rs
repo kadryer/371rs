@@ -5,18 +5,19 @@
 #![reexport_test_harness_main = "test_main"]
 
 mod vga;
+mod serial;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
-    println!("Hello World{}", "!");
-
-    kudos::init();
+    println!("I'm main{}", ".");
+    serial_println!("I'm main{}", ".");
 
     #[cfg(test)]
     test_main();
+
+    #[cfg(test)]
     kudos::qemu_quit(kudos::QEMU_PASS);
 
-    println!("It did not crash!");
     loop {}
 }
 

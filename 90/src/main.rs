@@ -4,24 +4,34 @@
 #![test_runner(kudos::_test_runner)]
 #![reexport_test_harness_main = "test_main"]
 
-mod vga;
+use kudos::println;
 
 #[unsafe(no_mangle)]
 pub extern "C" fn _start() -> ! {
-    println!("Hello World{}", "!");
+    
 
     kudos::init();
 
     #[cfg(test)]
-    test_main();
-    kudos::qemu_quit(kudos::QEMU_PASS);
+    {
+        test_main();
+        kudos::qemu_quit(kudos::QEMU_PASS);
+    }
 
     println!("It did not crash!");
-    loop {}
+
+    kudos::halt();
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    kudos::halt();
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &core::panic::PanicInfo) -> ! {
+    kudos::test_panic(info);
 }

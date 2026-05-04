@@ -4,12 +4,13 @@
 #![test_runner(_test_runner)]
 #![feature(abi_x86_interrupt)]
 
-pub mod vga;
-pub mod serial;
-pub mod interrupts;
 pub mod gdt;
+pub mod interrupts;
+pub mod serial;
+pub mod vga;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
 pub enum QemuExitCode {
     Success = 0xA,
     Failed = 0xF,
@@ -20,6 +21,7 @@ pub const QEMU_FAIL: QemuExitCode = QemuExitCode::Failed;
 
 pub fn qemu_quit(exit_code: QemuExitCode) {
     serial_print!("Exiting with code {:?}.\n", exit_code);
+
     unsafe {
         x86_64::instructions::port::Port::new(0xf4).write(exit_code as u32);
     }
@@ -28,6 +30,12 @@ pub fn qemu_quit(exit_code: QemuExitCode) {
 pub fn init() {
     gdt::init_gdt();
     interrupts::init_idt();
+}
+
+pub fn halt() -> ! {
+    loop {
+        x86_64::instructions::hlt();
+    }
 }
 
 pub fn test_panic(info: &core::panic::PanicInfo) -> ! {
@@ -69,5 +77,4 @@ fn panic(info: &core::panic::PanicInfo) -> ! {
 
 fn _ex() {
     assert!(true);
-    return;
 }
