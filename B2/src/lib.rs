@@ -4,11 +4,14 @@
 #![test_runner(_test_runner)]
 #![feature(abi_x86_interrupt)]
 
+extern crate alloc;
+
 pub mod gdt;
 pub mod interrupts;
 pub mod serial;
 pub mod vga;
 pub mod memory;
+pub mod allocator;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
