@@ -23,6 +23,7 @@ pub fn init_idt() {
             .set_handler_fn(timer_handler);
         IDT[InterruptIndex::Keyboard as usize]
             .set_handler_fn(keyboard_interrupt_handler);
+        IDT.page_fault.set_handler_fn(page_fault_handler);
         IDT.load();
 
         PICS.initialize();
@@ -31,13 +32,13 @@ pub fn init_idt() {
 }
 
 extern "x86-interrupt" fn breakpoint_handler(
-    stack_frame: x86_64::structures::idt::InterruptStackFrame,
+    stack_frame: InterruptStackFrame,
 ) {
     crate::serial_println!("EXCEPTION: BREAKPOINT\n{:#?}", stack_frame);
 }
 
 extern "x86-interrupt" fn double_fault_handler(
-    stack_frame: x86_64::structures::idt::InterruptStackFrame,
+    stack_frame: InterruptStackFrame,
     error_code: u64,
 ) -> ! {
     assert!(error_code == 0);
@@ -45,7 +46,7 @@ extern "x86-interrupt" fn double_fault_handler(
 }
 
 extern "x86-interrupt" fn timer_handler (
-    _stack_frame: x86_64::structures::idt::InterruptStackFrame,
+    _stack_frame: InterruptStackFrame,
 ) {
     //crate::println!("INTERRUPT: TIMER\n{:#?}", stack_frame);
     unsafe { PICS.notify_end_of_interrupt(InterruptIndex::Timer as u8) };
@@ -82,6 +83,17 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
     unsafe {
         PICS.notify_end_of_interrupt(InterruptIndex::Keyboard as u8);
     }
+}
+
+extern "x86-interrupt" fn page_fault_handler(
+    stack_frame: InterruptStackFrame,
+    error_code: x86_64::structures::idt::PageFaultErrorCode,
+) {
+    crate::println!("EXCEPTION: PAGE FAULT");
+    crate::println!("Accessed Address: {:?}", x86_64::registers::control::Cr2::read());
+    crate::println!("Error Code: {:?}", error_code);
+    crate::println!("{:#?}", stack_frame);
+    crate::halt();
 }
 
 // PIC

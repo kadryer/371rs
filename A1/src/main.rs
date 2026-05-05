@@ -17,8 +17,9 @@ pub extern "C" fn _start() -> ! {
         test_main();
         kudos::qemu_quit(kudos::QEMU_PASS);
     }
-
     println!("It did not crash!");
+
+    println!("Level 4 page table at: {:?}", x86_64::registers::control::Cr3::read().0.start_address());
 
     kudos::halt();
 }
