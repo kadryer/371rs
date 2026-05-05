@@ -3,6 +3,7 @@
 #![feature(custom_test_frameworks)]
 #![test_runner(_test_runner)]
 #![feature(abi_x86_interrupt)]
+#![feature(default_field_values)]
 
 extern crate alloc;
 
@@ -12,7 +13,7 @@ pub mod serial;
 pub mod vga;
 pub mod memory;
 pub mod allocator;
-
+pub mod snake;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u32)]
@@ -40,13 +41,6 @@ pub fn init(_boot_info: &'static bootloader::BootInfo) {
     let offset = x86_64::VirtAddr::new(_boot_info.physical_memory_offset);
     let mut mapper = unsafe { memory::init(offset) };
     let mut frame_allocator = unsafe { memory::BootInfoFrameAllocator::init(&_boot_info.memory_map) };
-    //let page = x86_64::structures::paging::Page::containing_address(x86_64::VirtAddr::new(0));
-    //memory::create_example_mapping(page, &mut mapper, &mut frame_allocator);
-    //let ptr: *mut u64 = page.start_address().as_mut_ptr();
-    //unsafe { ptr.write_volatile(0x_f021_f077_f065_f04e) };
-
-    println!("FIN");
-
     allocator::init_heap(&mut mapper, &mut frame_allocator).unwrap();
 }
 

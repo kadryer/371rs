@@ -7,11 +7,24 @@ pub enum InterruptIndex {
     Keyboard,
 }
 
+#[derive(Clone, Copy)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 use x86_64::structures::idt::InterruptStackFrame;
 use crate::print;
-
+lazy_static::lazy_static! {
+    pub static ref DIRECTION: spin::Mutex<Direction> = spin::Mutex::new(Direction::Right);
+}
 static mut IDT: x86_64::structures::idt::InterruptDescriptorTable =
     x86_64::structures::idt::InterruptDescriptorTable::new();
+static mut CLOCK: usize = 0;
+const TICK_RATE: usize = 10;
+
 
 pub fn init_idt() {
     unsafe {
@@ -28,6 +41,21 @@ pub fn init_idt() {
 
         PICS.initialize();
         x86_64::instructions::interrupts::enable();
+    }
+}
+
+pub fn set_direction(new_direction: Direction) {
+    let mut direction = DIRECTION.lock();
+
+    // Do nothing when attempting to 180
+    match (*direction, new_direction) {
+        (Direction::Up, Direction::Down) => {}
+        (Direction::Down, Direction::Up) => {}
+        (Direction::Left, Direction::Right) => {}
+        (Direction::Right, Direction::Left) => {}
+        _ => {
+            *direction = new_direction;
+        }
     }
 }
 
@@ -48,8 +76,11 @@ extern "x86-interrupt" fn double_fault_handler(
 extern "x86-interrupt" fn timer_handler (
     _stack_frame: InterruptStackFrame,
 ) {
-    //crate::println!("INTERRUPT: TIMER\n{:#?}", stack_frame);
-    unsafe { PICS.notify_end_of_interrupt(InterruptIndex::Timer as u8) };
+    unsafe {
+        CLOCK += 1;
+        if CLOCK % TICK_RATE == 0 { update() }
+        PICS.notify_end_of_interrupt(InterruptIndex::Timer as u8)
+    };
 }
 
 extern "x86-interrupt" fn keyboard_interrupt_handler(
@@ -73,8 +104,13 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(
     if let Ok(Some(key_event)) = keyboard.add_byte(scancode) {
         if let Some(key) = keyboard.process_keyevent(key_event) {
             match key {
-                DecodedKey::Unicode(character) => print!("{}", character),
-                DecodedKey::RawKey(key) => print!("{:?}", key),
+                DecodedKey::Unicode('w') => set_direction(Direction::Up),
+                DecodedKey::Unicode('a') => set_direction(Direction::Left),
+                DecodedKey::Unicode('s') => set_direction(Direction::Down),
+                DecodedKey::Unicode('d') => set_direction(Direction::Right),
+                DecodedKey::Unicode('q') => crate::qemu_quit(crate::QEMU_PASS),
+                DecodedKey::RawKey(_) => {},
+                _ => {},
             }
         }
     }
@@ -103,3 +139,8 @@ pub const PIC_2_OFFSET: u8 = PIC_1_OFFSET + 8;
 
 pub static mut PICS: pic8259::ChainedPics =
     unsafe { pic8259::ChainedPics::new(PIC_1_OFFSET, PIC_2_OFFSET) };
+
+// update
+fn update() {
+    print!("{}", crate::snake::update_display())
+}
